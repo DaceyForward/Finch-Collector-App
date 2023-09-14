@@ -5,7 +5,7 @@ from django.shortcuts import render
 #   {'name': 'Lilo', 'breed': 'house', 'description': 'furry little demon', 'age': 3},
 #   {'name': 'Zach', 'breed': 'zebra', 'description': 'gentle and loving', 'age': 2},
 # ]
-from django.views.generic.edit import CreateView
+from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from .models import Finch
 
 # Create your views here.
@@ -32,3 +32,11 @@ def finches_detail(request, finch_id):
 class FinchCreate(CreateView):
   model = Finch
   fields = '__all__'
+
+class FinchUpdate(UpdateView):
+  model = Finch
+  fields = ['breed', 'description', 'age']
+
+class FinchDelete(DeleteView):
+  model = Finch
+  success_url = '/finches'
