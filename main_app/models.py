@@ -2,6 +2,8 @@ from django.db import models
 
 from django.urls import reverse
 
+from datetime import date
+
 # Create your models here.
 
 MEALS = (
@@ -22,6 +24,12 @@ class Finch(models.Model):
     def get_absolute_url(self):
         return reverse('detail', kwargs={'finch_id': self.id})
 
+    def fed_for_today(self):
+        # filter produces an <QuerySet> for all feedings from current date
+        # count the items in that array, compare to the length of MEALS (tuple)
+        # we'll return a boolean that we can use in our template
+        return self.feeding_set.filter(date=date.today()).count() >= len(MEALS)
+
 # Model for Feedings (Finch -|---< Feeding)
 class Feeding(models.Model):
     date = models.DateField('feeding date')
@@ -32,8 +40,11 @@ class Feeding(models.Model):
         # set the default value for meal to be 'B'
         default=MEALS[0][0]
     )
-    Finch = models.ForeignKey(Finch, on_delete=models.CASCADE)
+    finch = models.ForeignKey(Finch, on_delete=models.CASCADE)
 
     def __str__(self):
     # Nice method for obtaining the friendly value of a Field.choice
         return f"{self.get_meal_display()} on {self.date}"
+
+    class Meta:
+        ordering = ['-date']
