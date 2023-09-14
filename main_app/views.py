@@ -5,7 +5,7 @@ from django.shortcuts import render
 #   {'name': 'Lilo', 'breed': 'house', 'description': 'furry little demon', 'age': 3},
 #   {'name': 'Zach', 'breed': 'zebra', 'description': 'gentle and loving', 'age': 2},
 # ]
-
+from django.views.generic.edit import CreateView
 from .models import Finch
 
 # Create your views here.
@@ -28,3 +28,7 @@ def finches_index(request):
 def finches_detail(request, finch_id):
     finch = Finch.objects.get(id=finch_id)
     return render(request, 'finches/detail.html', { 'finch': finch })
+
+class FinchCreate(CreateView):
+  model = Finch
+  fields = '__all__'
