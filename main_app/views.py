@@ -32,7 +32,7 @@ def about(request):
 # Add index view
 def finches_index(request):
   # We pass data to a template very much like we did in Express!
-    finches = Finch.objects.all() # Retrieve all cats
+    finches = Finch.objects.all() # Retrieve all 
     return render(request, 'finches/index.html', { 'finches': finches })
 
 def finches_detail(request, finch_id):
@@ -49,7 +49,7 @@ def add_feeding(request, finch_id):
     # validate the form
     if form.is_valid():
       # don't save the form to the db until it
-      # has the cat_id assigned
+      # has the id assigned
         new_feeding = form.save(commit=False)
         new_feeding.finch_id = finch_id
         new_feeding.save()
@@ -83,7 +83,7 @@ def add_photo(request, finch_id):
             s3.upload_fileobj(photo_file, bucket, key)
             # we'll build the entire url string
             url = f'{os.environ["S3_BASE_URL"]}{bucket}/{key}'
-            # we create the photo and associate it with the cat
+            # we create the photo and associate it 
             Photo.objects.create(url=url, finch_id=finch_id)
         except Exception as e:
             print('An error occured uploading to s3')
