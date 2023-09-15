@@ -1,3 +1,5 @@
+
+
 from django.shortcuts import render, redirect
 
 # old finch list - will add new via admin portal/models
@@ -8,8 +10,12 @@ from django.shortcuts import render, redirect
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.views.generic import ListView
 from django.views.generic.detail import DetailView
-from .models import Finch, Toy
+from .models import Finch, Toy, Photo
 from .forms import FeedingForm
+
+import uuid
+import boto3
+import os
 
 
 # Create your views here.
@@ -58,6 +64,53 @@ def unassoc_toy(request, finch_id, toy_id):
     # Note that you can pass a toy's id instead of the whole toy object
     Finch.objects.get(id=finch_id).toys.remove(toy_id)
     return redirect('detail', finch_id=finch_id)
+
+def add_photo(request, finch_id):
+    # we need a photo file (named via the 'name' attribute in the form field)
+    photo_file = request.FILES.get('photo-file', None)
+    AWS_ACCESS_KEY = os.environ['AWS_ACCESS_KEY']
+    AWS_SECRET_ACCESS_KEY = os.environ['AWS_SECRET_ACCESS_KEY']
+    # check if we actually got a photo, do something if we did, do something else if we didnt
+    if photo_file:
+        # here's where we'll do our S3 stuff
+        # target s3
+        s3 = boto3.client('s3', aws_access_key_id=AWS_ACCESS_KEY, aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
+        # we need a unique name for all of our files, so we'll use uuid to generate one automatically
+        key = uuid.uuid4().hex[:6] + photo_file.name[photo_file.name.rfind('.'):]
+        # just in case something goes wrong
+        try:
+            bucket = os.environ['S3_BUCKET']
+            s3.upload_fileobj(photo_file, bucket, key)
+            # we'll build the entire url string
+            url = f'{os.environ["S3_BASE_URL"]}{bucket}/{key}'
+            # we create the photo and associate it with the cat
+            Photo.objects.create(url=url, finch_id=finch_id)
+        except Exception as e:
+            print('An error occured uploading to s3')
+            print(e)
+
+    return redirect('detail', finch_id=finch_id)
+
+# def add_photo(request, finch_id):
+#     # photo-file will be the "name" attribute on the <input type="file">
+#     photo_file = request.FILES.get('photo-file', None)
+#     AWS_ACCESS_KEY = os.environ['AWS_ACCESS_KEY']
+#     AWS_SECRET_ACCESS_KEY = os.environ['AWS_SECRET_ACCESS_KEY']
+#     if photo_file:
+#         s3 = boto3.client('s3', aws_access_key_id=AWS_ACCESS_KEY, aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
+#         # need a unique "key" for S3 / needs image file extension too
+#         key = uuid.uuid4().hex[:6] + photo_file.name[photo_file.name.rfind('.'):]
+#         # just in case something goes wrong
+#         try:
+#             bucket = os.environ['S3_BUCKET']
+#             s3.upload_fileobj(photo_file, bucket, key)
+#             # build the full url string
+#             url = f"{os.environ['S3_BASE_URL']}{bucket}/{key}"
+#             Photo.objects.create(url=url, finch_id=finch_id)
+#         except Exception as e:
+#             print('An error occurred uploading file to S3')
+#             print(e)
+#     return redirect('detail', finch_id=finch_id)
 
 class FinchCreate(CreateView):
     model = Finch
